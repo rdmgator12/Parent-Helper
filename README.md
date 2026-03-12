@@ -1,4 +1,4 @@
-# Parent Helper
+# Parent Helper skill
 
 A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skill that turns Claude into your family's coordination engine — handling weekly schedules, meal planning, multi-store grocery optimization, custody tracking, and more.
 
