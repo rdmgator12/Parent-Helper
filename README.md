@@ -31,11 +31,16 @@ It connects to your real services via MCP (Model Context Protocol) servers:
 
 ## Quick Start
 
-### 1. Install Claude Code
+### 1. Get Claude Code
 
+**Desktop app (recommended):** Download [Claude Code](https://claude.ai/download) for macOS or Windows — no terminal experience needed.
+
+**Terminal CLI:** If you prefer the command line:
 ```bash
 npm install -g @anthropic-ai/claude-code
 ```
+
+Both work identically. The desktop app is the easiest way to get started.
 
 ### 2. Copy the Skill File
 
@@ -158,7 +163,7 @@ parent-helper/
 
 ## Requirements
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (CLI)
+- [Claude Code](https://claude.ai/download) — desktop app or terminal CLI (both work)
 - At least one MCP server connected (Google Calendar recommended as the foundation)
 - A Google Calendar with your family's schedules populated
 
