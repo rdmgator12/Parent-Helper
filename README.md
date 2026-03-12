@@ -139,6 +139,7 @@ parent-helper/
   LICENSE                            # MIT
   setup/
     SETUP.md                         # Step-by-step MCP setup guide
+    store-profiles.md                # Pre-built profiles for 15+ US grocery stores
     family-config-example.md         # Example of a fully configured family profile
   examples/
     sunday-briefing-example.md       # Example weekly briefing output
@@ -148,6 +149,7 @@ parent-helper/
 
 ## Customization Tips
 
+- **Pick your stores.** Pre-built profiles for 15+ US grocery stores are in [`setup/store-profiles.md`](setup/store-profiles.md) — Walmart, Kroger, Publix, H-E-B, Aldi, Meijer, Whole Foods, Target, Safeway, Costco, and more. Copy the profiles for your local stores into the SKILL.md. If your store isn't listed, the "How to Add Any Store" guide walks you through building a profile in 5 minutes.
 - **Start simple.** You don't need every integration on day one. Start with just Google Calendar and meal planning. Add Notion, Chrome automation, and grocery bargain hunting later.
 - **Be specific in food profiles.** The more detail you give about each person's preferences and cooking abilities, the better the meal plans get. "Doesn't like vegetables" is okay. "Doesn't like vegetables but will eat carrots roasted with honey, and tolerates spinach hidden in smoothies" is much better.
 - **Cooking assignment logic is the secret weapon.** Matching meal complexity to the cook available that night is what makes the plans actually work in real life. A crockpot meal assigned to the less experienced cook on a work night beats an ambitious recipe that never gets made.
@@ -171,10 +173,11 @@ parent-helper/
 Found a way to make Parent Helper better for your family? PRs welcome.
 
 Ideas for contributions:
-- Support for additional grocery stores / regions
+- **New store profiles** — add your local store to `setup/store-profiles.md` (search URL, store brand, DOM tips, cart button)
 - Meal plan templates for common dietary patterns (vegetarian, keto, allergen-free)
 - Integration guides for additional MCP servers
 - Localization for non-US school systems and grocery chains
+- Regional store coverage (international grocery chains)
 
 ## License
 

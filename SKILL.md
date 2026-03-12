@@ -174,40 +174,58 @@ Generate age-appropriate, practical meal plans based on who's home each day AND 
 
 Convert meal plans into optimized, multi-store shopping plans that minimize cost while maximizing convenience. Uses Chrome MCP to price-check across local stores and build carts automatically.
 
-<!-- Configure your local stores below. Add or remove rows as needed.
-     The system works best with 2-4 stores for comparison.
-     Common US store setups:
-       Budget: Walmart, Aldi, WinCo, Grocery Outlet
-       Mid-range: Kroger, Publix, H-E-B, Meijer
-       Premium: Whole Foods, Trader Joe's, Sprouts
-     Pick your 2-4 based on what's near you. -->
+<!-- STORE CONFIGURATION
+     Add your local stores below. Use 2-4 stores for best results.
+     Pre-built profiles for 15+ US stores are in setup/store-profiles.md — just copy
+     the details for your local stores. If your store isn't listed, the "How to Add
+     Any Store" guide at the bottom of that file walks you through building a profile
+     in 5 minutes.
+
+     For each store you need:
+       1. Search URL pattern (for Chrome MCP price scanning)
+       2. Store brand name (to prefer for staples)
+       3. Deal types to watch for (BOGO, digital coupons, rollbacks, etc.)
+       4. Cart button description (for Chrome MCP cart automation)
+       5. DOM extraction tips (how to read prices from the page)
+     -->
 
 **Your Stores:**
 
 | Store | Distance | Price Tier | Platform | Cart Automation | Membership |
 |-------|----------|-----------|----------|-----------------|------------|
-| **{{STORE_1}}** | {{distance}} | $ | {{website}} | Chrome MCP | {{e.g., "Walmart+ — free delivery/pickup"}} |
+| **{{STORE_1}}** | {{distance}} | $ | {{website}} | Chrome MCP | {{membership info}} |
 | **{{STORE_2}}** | {{distance}} | $ | {{website or "Instacart"}} | {{Chrome MCP / Pickup list}} | {{membership or "None"}} |
 | **{{STORE_3}}** | {{distance}} | $$ | {{website or "Instacart"}} | {{Chrome MCP / Pickup list}} | {{membership or "None"}} |
-| **{{STORE_4}}** | {{distance}} | $$$ | {{website}} | Chrome MCP | {{e.g., "Prime — free delivery $35+"}} |
+| **{{STORE_4}}** | {{distance}} | $$$ | {{website}} | Chrome MCP | {{membership info}} |
 
-<!-- Delete rows for stores you don't use. 2 stores is fine. -->
+<!-- Add or remove rows. 2 stores is fine. See setup/store-profiles.md for 15+ pre-built profiles. -->
 
-**Search URL Patterns:**
-<!-- CRITICAL for reliability. Direct URL navigation works FAR better than
-     typing in search bars via Chrome MCP. Find the search URL pattern for
-     each store by searching manually once and noting the URL format.
-     Replace the search terms with <search+terms> or <search%20terms>. -->
+**Store Profiles:**
+<!-- Copy the full profile for each of your stores from setup/store-profiles.md.
+     Each profile gives the system everything it needs to scan prices, detect deals,
+     and load carts at that specific store. Example for one store: -->
+
+- **{{STORE_1_NAME}}**: {{website}}
+  - Search URL: `{{url pattern with <search+terms> placeholder}}`
+  - Store brand: {{brand name — e.g., "Great Value", "Kroger", "365 by Whole Foods"}}
+  - Deal types: {{what to watch for — e.g., "BOGO, Rollback (yellow badge), Clearance"}}
+  - Cart button: {{description — e.g., "Blue '+ Add' button on product cards"}}
+  - DOM tips: {{how to extract prices — e.g., "product cards with data-item-id, innerText extraction"}}
+  - Notes: {{delivery/pickup options, minimums, regional info}}
+
+<!-- Repeat for each store. The more detail in each profile, the better the
+     price scanning and cart automation will work. -->
+
+**Search URL Patterns (quick reference):**
+<!-- Direct URL navigation is FAR more reliable than typing in search bars.
+     Copy the correct pattern for each store from setup/store-profiles.md.
+     Common patterns: -->
 ```
-Walmart:     https://www.walmart.com/search?q=<search+terms>&cat_id=976759
-Aldi:        https://www.instacart.com/store/aldi/search/<search%20terms>
-Publix:      https://www.instacart.com/store/publix/search/<search%20terms>
-Whole Foods: https://www.amazon.com/s?k=<search+terms>&i=wholefoods
-Kroger:      https://www.kroger.com/search?query=<search+terms>
-Target:      https://www.target.com/s?searchTerm=<search+terms>
-H-E-B:       https://www.heb.com/search/?q=<search+terms>
+{{STORE_1}}: {{search URL pattern}}
+{{STORE_2}}: {{search URL pattern}}
+{{STORE_3}}: {{search URL pattern}}
+{{STORE_4}}: {{search URL pattern}}
 ```
-<!-- Keep only the stores you use. These are proven working patterns as of March 2026. -->
 
 **Process:**
 1. Generate ingredient list from meal plan
@@ -224,22 +242,19 @@ H-E-B:       https://www.heb.com/search/?q=<search+terms>
 - Navigate to each store's search URL for each item (direct URL — never type in search bars)
 - Extract price data from the page via screenshot + DOM extraction (innerText, aria labels)
 - For each item, record: store, product name, price, unit price (per oz / per lb), any deals/sales
-- Look for store brand options — these are usually cheapest:
-  - Walmart → Great Value
-  - Aldi → store brands (most items)
-  - Kroger → Kroger brand / Simple Truth
-  - Whole Foods → 365 by Whole Foods
-  - Target → Good & Gather
+- **Always prefer store brands** for staples — they're typically 20-40% cheaper than national brands. Each store's brand is listed in its profile above.
 - Flag these deal types (they change which store wins):
-  - **BOGO** (buy one get one) — effectively halves the price. Publix is famous for these.
-  - **Rollback** — Walmart's sale pricing (yellow badge)
-  - **Clearance / Manager's Special** — meat and bakery items near expiration
-  - **Club member pricing** — loyalty card prices that beat shelf price
-- DOM extraction tips:
-  - Walmart: product cards with `data-item-id`, prices visible in card text. Also has `__NEXT_DATA__` JSON but auth-blocked — use DOM scraping.
-  - Instacart (Aldi/Publix): CSS classes are dynamic (change on deploy), but `aria-label` attributes and `innerText` extraction are reliable. Look for sale %, "BOGO" badges, "Best seller" tags.
-  - Amazon/Whole Foods: product listings with prices, "Prime" savings badges, "previously purchased" tags.
-  - General tip: screenshots are the reliable fallback when DOM extraction gets tricky.
+  - **BOGO** (buy one get one) — effectively halves the price. Check each store's profile for their specific deal types.
+  - **Digital coupons** — many stores (Kroger, Safeway, Meijer, Target) require you to "clip" digital coupons before adding to cart for the deal price.
+  - **Rollback / sale pricing** — temporary price drops, often on a weekly cycle.
+  - **Clearance / Manager's Special** — meat and bakery items near expiration.
+  - **Club/loyalty pricing** — some stores show a higher price unless you have their loyalty card.
+  - **Multi-buy deals** — "Buy 5 Save $5", "10 for $10", "Combo Locos" (H-E-B) — factor in the effective per-unit price.
+- DOM extraction — use each store's DOM tips from its profile above. General principles:
+  - `aria-label` attributes and `innerText` extraction work across most store sites.
+  - Instacart-based stores (Aldi, Publix, etc.) have dynamic CSS classes — never rely on class names, use aria labels and text content.
+  - Direct website stores (Walmart, Kroger, Target, H-E-B) have more stable DOM structures.
+  - Screenshots are the reliable fallback when DOM extraction gets tricky — take a screenshot, read the prices visually.
 
 **Smart Split Logic:**
 1. For each item, find the cheapest option across all configured stores
@@ -282,10 +297,12 @@ For each store with cart automation enabled:
 5. Move to next item
 
 **Store-specific tips:**
-- **Walmart**: Blue "+ Add" button on product cards. "Overall pick" and "Best seller" badges indicate good options. Check "Pickup as soon as tomorrow" availability. For produce/meat, note per-lb pricing.
-- **Amazon/Whole Foods**: "Add to cart" button on listings. IMPORTANT: Amazon Fresh and Whole Foods have **separate carts** — always ensure you're in the Whole Foods section (`i=wholefoods` URL parameter). Look for "previously purchased" items for fast matching.
-- **Instacart (Aldi/Publix)**: Instacart has green "Add" buttons. Product cards show sale percentages and BOGO badges. For stores on Instacart, you can also generate direct search links for the user to add items manually.
-- **Kroger/Target/H-E-B**: Similar pattern — search URL → product card → add to cart button. Check for digital coupons that can be clipped before adding.
+<!-- These come from each store's profile. The system uses the cart button
+     description and DOM tips from the profiles configured above. Key patterns: -->
+- **Direct website stores** (Walmart, Kroger, Target, H-E-B, Meijer, Safeway, etc.): Search URL → product card → "Add to Cart" button. If the store has digital coupons, clip them before adding items. Check for per-unit pricing to compare sizes.
+- **Amazon-based stores** (Whole Foods): IMPORTANT: Amazon Fresh and Whole Foods have **separate carts**. Always ensure the URL contains the correct store parameter (e.g., `&i=wholefoods`). Look for "previously purchased" items for fast matching.
+- **Instacart-based stores** (Aldi, Publix, etc.): Green "Add" buttons on product cards. Sale percentages and BOGO badges visible on cards. Can also generate direct Instacart search links for the user to add items manually instead of full cart automation.
+- **In-store-only stores** (Trader Joe's, WinCo, Grocery Outlet, etc.): No cart automation possible. Generate a formatted **pickup list** organized by store aisle/section. Can still scan their websites for price reference where available.
 
 **Sunday Briefing → Multi-Store Cart Flow:**
 ```

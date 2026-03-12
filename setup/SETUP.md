@@ -101,25 +101,20 @@ Chrome MCP enables the multi-store grocery bargain hunter and cart automation.
    - Instacart (if using for Aldi/Publix/etc.)
    - Amazon (if using Whole Foods)
 
-4. Configure your stores in SKILL.md:
-   - Find the search URL pattern for each store (search for an item, note the URL format)
-   - Note your membership status (e.g., Walmart+, Prime)
-   - Set your local store/zip code in each account
+4. **Pick your stores** — open [`store-profiles.md`](store-profiles.md) and find your local stores:
+   - **15+ pre-built profiles**: Walmart, Kroger, Aldi, Publix, H-E-B, Meijer, Target, Whole Foods, Safeway/Albertsons, WinCo, Costco, Sam's Club, Trader Joe's, Sprouts, Grocery Outlet, Save A Lot, Fresh Market
+   - Each profile gives you: search URL, store brand, deal types, cart button, and DOM extraction tips
+   - Copy the profiles for your 2-4 local stores into the SKILL.md grocery section
 
-### Finding Search URL Patterns
+5. **Store not listed?** The "How to Add Any Store" guide at the bottom of `store-profiles.md` walks you through building a profile for any grocery store in 5 minutes. You just need:
+   - The search URL pattern (search for an item, note the URL)
+   - The store brand name
+   - The add-to-cart button description
+   - Basic DOM extraction notes
 
-Search for any item on each store's website and look at the URL:
+6. Set your local store / zip code in each store's website (prices vary by location)
 
-```
-Walmart:     https://www.walmart.com/search?q=chicken+breast
-Aldi:        https://www.instacart.com/store/aldi/search/chicken%20breast
-Publix:      https://www.instacart.com/store/publix/search/chicken%20breast
-Whole Foods: https://www.amazon.com/s?k=chicken+breast&i=wholefoods
-Kroger:      https://www.kroger.com/search?query=chicken+breast
-Target:      https://www.target.com/s?searchTerm=chicken+breast
-```
-
-Replace the search terms with `<search+terms>` or `<search%20terms>` in your SKILL.md.
+7. Note your memberships in SKILL.md: Walmart+, Amazon Prime, Kroger Plus, Costco, etc.
 
 ## Verifying Your Setup
 
