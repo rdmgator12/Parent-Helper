@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Personal config (if someone fills in their SKILL.md locally)
+my-family-config.md
+*.personal.md
+
+# Claude Code local settings
+.claude/
