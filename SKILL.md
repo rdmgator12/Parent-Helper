@@ -174,66 +174,136 @@ Generate age-appropriate, practical meal plans based on who's home each day AND 
 
 Convert meal plans into optimized, multi-store shopping plans that minimize cost while maximizing convenience. Uses Chrome MCP to price-check across local stores and build carts automatically.
 
-<!-- Configure your local stores below. Delete stores you don't use, add ones you do.
-     The system works best with 2-4 stores for comparison. -->
+<!-- Configure your local stores below. Add or remove rows as needed.
+     The system works best with 2-4 stores for comparison.
+     Common US store setups:
+       Budget: Walmart, Aldi, WinCo, Grocery Outlet
+       Mid-range: Kroger, Publix, H-E-B, Meijer
+       Premium: Whole Foods, Trader Joe's, Sprouts
+     Pick your 2-4 based on what's near you. -->
 
 **Your Stores:**
 
-| Store | Distance | Price Tier | Platform | Cart Automation |
-|-------|----------|-----------|----------|-----------------|
-| **{{STORE_1}}** | {{distance}} | $ | {{website}} ({{membership info}}) | {{Yes/No}} |
-| **{{STORE_2}}** | {{distance}} | $$ | {{website or Instacart}} | {{Yes/No}} |
-| **{{STORE_3}}** | {{distance}} | $$$ | {{website}} | {{Yes/No}} |
+| Store | Distance | Price Tier | Platform | Cart Automation | Membership |
+|-------|----------|-----------|----------|-----------------|------------|
+| **{{STORE_1}}** | {{distance}} | $ | {{website}} | Chrome MCP | {{e.g., "Walmart+ — free delivery/pickup"}} |
+| **{{STORE_2}}** | {{distance}} | $ | {{website or "Instacart"}} | {{Chrome MCP / Pickup list}} | {{membership or "None"}} |
+| **{{STORE_3}}** | {{distance}} | $$ | {{website or "Instacart"}} | {{Chrome MCP / Pickup list}} | {{membership or "None"}} |
+| **{{STORE_4}}** | {{distance}} | $$$ | {{website}} | Chrome MCP | {{e.g., "Prime — free delivery $35+"}} |
+
+<!-- Delete rows for stores you don't use. 2 stores is fine. -->
 
 **Search URL Patterns:**
-<!-- These are the direct URLs used to search each store.
-     Direct URL navigation is far more reliable than typing in search bars.
-     Find the search URL pattern for each store by searching manually once
-     and noting the URL format. -->
+<!-- CRITICAL for reliability. Direct URL navigation works FAR better than
+     typing in search bars via Chrome MCP. Find the search URL pattern for
+     each store by searching manually once and noting the URL format.
+     Replace the search terms with <search+terms> or <search%20terms>. -->
 ```
-{{STORE_1}}: {{search URL pattern, e.g., "https://www.walmart.com/search?q=<search+terms>"}}
-{{STORE_2}}: {{search URL pattern}}
-{{STORE_3}}: {{search URL pattern}}
+Walmart:     https://www.walmart.com/search?q=<search+terms>&cat_id=976759
+Aldi:        https://www.instacart.com/store/aldi/search/<search%20terms>
+Publix:      https://www.instacart.com/store/publix/search/<search%20terms>
+Whole Foods: https://www.amazon.com/s?k=<search+terms>&i=wholefoods
+Kroger:      https://www.kroger.com/search?query=<search+terms>
+Target:      https://www.target.com/s?searchTerm=<search+terms>
+H-E-B:       https://www.heb.com/search/?q=<search+terms>
 ```
+<!-- Keep only the stores you use. These are proven working patterns as of March 2026. -->
 
 **Process:**
 1. Generate ingredient list from meal plan
 2. Consolidate duplicates and estimate quantities based on headcount
 3. Add household staples if requested
 4. Organize by category: Proteins, Produce, Dairy & Eggs, Pantry, Bakery, and special items
-5. **PRICE SCAN** — For each item, search stores via Chrome MCP and record prices
-6. **SMART SPLIT** — Assign each item to the cheapest store, group by store
-7. Present comparison table + recommended split with savings calculation
-8. On "load the carts" — build carts via Chrome MCP where possible, generate lists for others
-9. User reviews and checks out
+5. **PRICE SCAN** — For each item, search all configured stores via Chrome MCP and record prices
+6. **SMART SPLIT** — Assign each item to the cheapest store, then group by store for efficient shopping
+7. Present the comparison table + recommended split with savings calculation
+8. On "load the carts" — build carts via Chrome MCP where supported, generate pickup lists for others
+9. User reviews all carts → checkout
 
 **Price Scanning Workflow (Chrome MCP):**
-- Navigate to each store's search URL for each item
-- Extract price data from the page via screenshot + DOM extraction
-- For each item, record: store, product name, price, unit price, any deals/sales
-- Look for store brand options (usually cheapest)
-- Flag BOGO deals, rollbacks, and sales
+- Navigate to each store's search URL for each item (direct URL — never type in search bars)
+- Extract price data from the page via screenshot + DOM extraction (innerText, aria labels)
+- For each item, record: store, product name, price, unit price (per oz / per lb), any deals/sales
+- Look for store brand options — these are usually cheapest:
+  - Walmart → Great Value
+  - Aldi → store brands (most items)
+  - Kroger → Kroger brand / Simple Truth
+  - Whole Foods → 365 by Whole Foods
+  - Target → Good & Gather
+- Flag these deal types (they change which store wins):
+  - **BOGO** (buy one get one) — effectively halves the price. Publix is famous for these.
+  - **Rollback** — Walmart's sale pricing (yellow badge)
+  - **Clearance / Manager's Special** — meat and bakery items near expiration
+  - **Club member pricing** — loyalty card prices that beat shelf price
+- DOM extraction tips:
+  - Walmart: product cards with `data-item-id`, prices visible in card text. Also has `__NEXT_DATA__` JSON but auth-blocked — use DOM scraping.
+  - Instacart (Aldi/Publix): CSS classes are dynamic (change on deploy), but `aria-label` attributes and `innerText` extraction are reliable. Look for sale %, "BOGO" badges, "Best seller" tags.
+  - Amazon/Whole Foods: product listings with prices, "Prime" savings badges, "previously purchased" tags.
+  - General tip: screenshots are the reliable fallback when DOM extraction gets tricky.
+
+**Smart Split Logic:**
+1. For each item, find the cheapest option across all configured stores
+2. Factor in deals: BOGO effectively halves the price, rollbacks/sales override base price
+3. Group items by winning store
+4. Calculate total: optimized split vs. all-at-most-expensive-store = savings
+5. Convenience check: if only 1-2 items win at a store, consider consolidating to reduce trips (flag it but let the user decide)
 
 **Smart Split Output Format:**
 ```
-Best Split This Week: $XX.XX (saved $XX.XX vs single-store — XX% cheaper)
+Best Split This Week: $XX.XX (saved $XX.XX vs all-{{most expensive store}} — XX% cheaper)
 
-STORE 1 (delivery/pickup) — $XX.XX
+{{STORE_1_EMOJI}} {{STORE_1}} (delivery/pickup) — $XX.XX
    Item 1          $X.XX  (vs $X.XX baseline)
-   Item 2          $X.XX  (vs $X.XX baseline)
+   Item 2          $X.XX  Rollback! (vs $X.XX baseline)
+   → [Load Cart] or [Pickup List]
 
-STORE 2 (delivery/pickup) — $XX.XX
+{{STORE_2_EMOJI}} {{STORE_2}} (delivery/pickup) — $XX.XX
    Item 1          $X.XX  BOGO! (vs $X.XX baseline)
+   → [Instacart Link] or [Pickup List]
 
-STORE 3 (delivery) — $XX.XX
+{{STORE_3_EMOJI}} {{STORE_3}} (delivery) — $XX.XX
    Item 1          $X.XX  (best price here)
+   → [Load Cart]
 
-Not available online: [items to grab separately]
+Not available online: [items to grab in-store separately]
+```
+
+**Cart Automation — How to Load Carts via Chrome MCP:**
+
+<!-- These are the actual Chrome MCP interaction patterns for each store.
+     Fill in the details for your stores. The key insight: direct URL navigation
+     to search results, then click "Add to Cart" buttons. -->
+
+For each store with cart automation enabled:
+1. Navigate to the store's search URL for the item
+2. Identify the correct product (prefer store brand for staples, match size/quantity needed)
+3. Click the "Add to Cart" / "Add" / "+" button on the product card
+4. For quantities > 1: click the add button multiple times or use the quantity selector
+5. Move to next item
+
+**Store-specific tips:**
+- **Walmart**: Blue "+ Add" button on product cards. "Overall pick" and "Best seller" badges indicate good options. Check "Pickup as soon as tomorrow" availability. For produce/meat, note per-lb pricing.
+- **Amazon/Whole Foods**: "Add to cart" button on listings. IMPORTANT: Amazon Fresh and Whole Foods have **separate carts** — always ensure you're in the Whole Foods section (`i=wholefoods` URL parameter). Look for "previously purchased" items for fast matching.
+- **Instacart (Aldi/Publix)**: Instacart has green "Add" buttons. Product cards show sale percentages and BOGO badges. For stores on Instacart, you can also generate direct search links for the user to add items manually.
+- **Kroger/Target/H-E-B**: Similar pattern — search URL → product card → add to cart button. Check for digital coupons that can be clipped before adding.
+
+**Sunday Briefing → Multi-Store Cart Flow:**
+```
+Sunday Briefing generated
+  → Grocery list produced (organized by category)
+  → User says "bargain hunt" or "find the deals" or "load the carts"
+  → Price scan all stores via Chrome MCP (~2-4 min per item across stores)
+  → Smart split: cheapest store per item, grouped for shopping
+  → Savings report: optimized total vs. single-store baseline
+  → Cart 1 loaded via Chrome (e.g., Walmart)
+  → Cart 2 loaded via Chrome (e.g., Whole Foods/Amazon)
+  → Remaining stores: Instacart links or formatted pickup lists
+  → User reviews all carts → checkout
 ```
 
 **Trigger Words:**
 - "bargain hunt", "find the deals", "price check", "compare prices"
-- "load the carts" (plural = multi-store), "load the cart" (singular = primary store only)
+- "load the carts" (plural = multi-store split), "load the cart" (singular = primary store only)
 - "smart split", "cheapest option", "save money on groceries"
 - Any store name, "grocery cart", "grocery run", "weekly groceries"
 
@@ -307,6 +377,13 @@ Proactively identify and flag problems before they happen.
 - On-call or night shift overlaps with the other parent's shifts
 
 When a conflict is detected, present it clearly with 2-3 resolution options.
+
+### Grocery Budget
+- **Target:** {{e.g., "$250/week" or "$200/week"}} (~{{monthly equivalent}}/month)
+- Based on: {{your household size and location, e.g., "2 adults + 1 child (50% custody) + 1 toddler, cooking at home, Tampa FL"}}
+- When bargain hunt / multi-store split is active, goal is to push below the target
+- Flag it if a weekly grocery list is trending over budget
+- Track savings over time: optimized split vs. single-store baseline
 
 ## Integration Map
 
