@@ -4,9 +4,8 @@ This guide walks you through connecting the MCP servers that power Parent Helper
 
 ## Prerequisites
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed (`npm install -g @anthropic-ai/claude-code`)
+- [Claude Code](https://claude.ai/download) installed — either the **desktop app** (recommended, no terminal needed) or the **terminal CLI** (`npm install -g @anthropic-ai/claude-code`)
 - A Google account with your family's calendar populated
-- Node.js 18+ installed
 
 ## Step 1: Install the Skill
 
