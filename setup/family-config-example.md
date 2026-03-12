@@ -86,6 +86,8 @@ Publix:   https://www.instacart.com/store/publix/search/<search%20terms>
 
 ## Notion Dashboard
 
+> **Note:** The IDs below are example placeholders — do not use them literally. Replace each one with your actual Notion page and database IDs. To find your IDs, open the page/database in Notion, click "Share," and copy the ID from the URL.
+
 - Dashboard Page ID: `a1b2c3d4-e5f6-7890-abcd-ef1234567890`
 - To-Do List DB: `11111111-2222-3333-4444-555555555555` / `collection://aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee`
 - Important Dates DB: `66666666-7777-8888-9999-000000000000` / `collection://ffffffff-1111-2222-3333-444444444444`
