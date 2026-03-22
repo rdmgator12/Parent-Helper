@@ -9,7 +9,10 @@ description: >
   "find the deals", "compare prices", "price check", "smart split", "save money on groceries",
   family calendar review, or anything involving coordinating schedules and meals for a family.
   Also trigger when the user says "parent helper", "family mode", "week ahead", or "plan the week".
-  This skill is the central hub — if it touches the family schedule or the family's food, it belongs here.
+  Trigger on local event queries: "what's going on", "things to do", "events this weekend",
+  "anything happening", "stuff to do", "what can we do with the kids", "family stuff this weekend".
+  This skill is the central hub — if it touches the family schedule, the family's food, or local
+  family-friendly events, it belongs here.
 ---
 
 # Parent Helper — Family Coordination Engine
@@ -128,6 +131,9 @@ Generate a comprehensive week-ahead briefing every Sunday (or on demand). This i
 
 ### Grocery List
 [Consolidated list by category]
+
+### What's Going On This Week
+[Local events organized by day — nearby cities, age tags, drive times]
 
 ### Action Items
 [Who needs to do what before the week starts]
@@ -383,7 +389,85 @@ Before generating new data, check the dashboard first — it's the source of tru
 - "What do we need from the store?" → read the Grocery List section
 - Only regenerate from scratch if the dashboard is stale or the user explicitly asks
 
-### 6. Schedule Conflict Detection
+### 6. Local Events Scout
+
+Surface real, specific events happening this week that the family would enjoy. Runs as part of the weekly briefing and can be triggered on demand.
+
+**Location Configuration:**
+
+<!-- Set your zip code and the system will search for events in your area.
+     Optionally list specific nearby cities/neighborhoods to search. -->
+
+- **Zip Code:** `{{YOUR_ZIP_CODE}}` — used to determine your metro area for event searches
+- **Nearby Cities/Areas to Search** (optional — improves results):
+  - {{CITY_1}} (~{{distance}} from home)
+  - {{CITY_2}} (~{{distance}} from home)
+  - {{CITY_3}} (~{{distance}} from home)
+  - {{CITY_4}} (~{{distance}} from home)
+
+<!-- Example:
+- **Zip Code:** `78701`
+- **Nearby Cities/Areas:**
+  - Round Rock (~20 min)
+  - Georgetown (~30 min)
+  - San Marcos (~45 min)
+  - Dripping Springs (~30 min)
+-->
+
+**Process:**
+1. WebSearch local event calendars for the current week, using queries like:
+   - `[city near zip code] events [date range] [year]` for each city in the coverage area
+   - `site:patch.com/[state]/[city] calendar`
+   - `site:allevents.in/[city] today` or `this weekend`
+   - `[metro area] events this weekend [date]`
+   - `[city] farmers market [date]` for recurring markets
+   - Search for seasonal events: spring training, holiday festivals, county fairs, etc.
+2. Filter for **actual confirmed events with dates and times** — not generic "things to do" tourist lists
+3. Tag each event by who it's good for: Toddler-friendly, Kid-friendly, Teen-friendly, Adult, or Family (all ages)
+4. Note approximate drive time from home zip code
+
+**Key Recurring Events to Track:**
+<!-- List any weekly/monthly recurring events near you that are worth checking.
+     These serve as anchors — the system always includes them if they fall in the week. -->
+- {{e.g., "Sunday farmers market at City Park — every Sunday, 9am-1pm"}}
+- {{e.g., "First Friday Art Walk — first Friday of every month, 5-9pm"}}
+- {{e.g., "Sunset celebration at the pier — nightly"}}
+
+<!-- Example recurring events:
+- SFC Farmers' Market Downtown — every Saturday, 9am-1pm
+- First Friday Art Walk on South Congress — first Friday of each month, 5-9pm
+- Zilker Park Kite Festival — annual, first weekend of March
+- Round Rock Express home games — check schedule weekly
+-->
+
+**Output Format (in briefing):**
+```
+### What's Going On This Week
+[Organized by day, then by proximity — closest first]
+
+**Saturday**
+- Chalk Art Festival — Main St, City A, 9am-5pm (Family) ~10 min
+- Baseball Game — Stadium, City B, 1:07pm (Family) ~15 min
+
+**Sunday**
+- Farmers Market — Town Square, 10am-2pm (Family) ~10 min
+- Food Festival — Waterfront Park, 4-10pm (Family) ~30 min
+
+**Weeknight Pick**
+- [anything notable Mon-Thu]
+```
+
+**On-Demand Trigger Words:**
+- "what's going on", "things to do", "events this weekend", "anything happening"
+- "what can we do with [child name]", "family stuff this weekend", "stuff to do"
+
+**Guardrails:**
+- Only include events with confirmed dates/times/locations from search results — never guess or recycle old event info
+- Always note if an event is the last day or selling out
+- For ticketed events, include price when available
+- Don't pad the list with generic permanent attractions (aquarium, zoo, parks) unless they have a **special event** running that week
+
+### 7. Schedule Conflict Detection
 Proactively identify and flag problems before they happen.
 
 **Watch for:**
@@ -417,7 +501,7 @@ When a conflict is detected, present it clearly with 2-3 resolution options.
 ## Interaction Patterns
 
 **"Plan the week"** or **"Sunday briefing"**
-→ Full pipeline: Calendar check → custody days → meal plan → grocery list → briefing → dashboard update
+→ Full pipeline: Calendar check → custody days → meal plan → grocery list → local events scout → briefing → dashboard update
 
 **"What's for dinner?"** (single day)
 → Check who's home today → suggest dinner based on current meal plan or generate a quick option
@@ -430,6 +514,9 @@ When a conflict is detected, present it clearly with 2-3 resolution options.
 
 **"We need groceries"** or **"Grocery run"**
 → Pull current meal plan → generate list → offer: "Want me to bargain hunt across stores or just load one cart?"
+
+**"What's going on this weekend?"** or **"Anything happening?"** or **"Things to do"**
+→ Local events scout: WebSearch event calendars across nearby cities → filter to confirmed events with dates/times → tag by age-appropriateness → organize by day and proximity
 
 **"Email {{CO_PARENT}} about [X]"**
 → Draft professional co-parent email → present for review

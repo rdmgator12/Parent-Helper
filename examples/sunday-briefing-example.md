@@ -157,6 +157,25 @@ Parent 1 is post-nights. Parent 2 works 7a-7p. **Sitter covers 7AM-noon.** Paren
 
 ---
 
+## What's Going On This Week
+
+**Saturday 3/21**
+- Spring Fling Street Fair — Downtown, 10am-4pm (Family) ~5 min
+  - Live music, food trucks, bounce houses, face painting
+- Minor League Baseball — City Stadium, 6:05pm (Family) ~15 min
+  - $5 lawn seats, fireworks after the game
+
+**Sunday 3/22**
+- Farmers Market — Town Square, 9am-1pm (Family) ~10 min
+  - Weekly market, 60+ vendors, live music, stroller-friendly
+- Kite Festival — Bayfront Park, 11am-3pm (Toddler/Kid-friendly) ~20 min
+  - Free admission, kite-making station for kids
+
+**Weeknight Pick**
+- Wednesday: Story Time at the Library — 10:30am (Toddler-friendly) ~5 min
+
+---
+
 ## Action Items
 
 1. **Parent 1:** FaceTime Lily on her actual birthday (Mon 3/16) — coordinate with co-parent
@@ -168,4 +187,4 @@ Parent 1 is post-nights. Parent 2 works 7a-7p. **Sitter covers 7AM-noon.** Paren
 
 ---
 
-*This briefing cross-references three schedules, adjusts all meals to daily headcount, assigns cooking complexity to the right parent, and flags every conflict with a resolution. That's Parent Helper at full power.*
+*This briefing cross-references three schedules, adjusts all meals to daily headcount, assigns cooking complexity to the right parent, surfaces local events worth checking out, and flags every conflict with a resolution. That's Parent Helper at full power.*
