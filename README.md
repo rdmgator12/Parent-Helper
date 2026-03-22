@@ -14,6 +14,7 @@ Parent Helper is a single skill file that gives Claude deep context about your f
 - **Custody Schedule Awareness** — For blended families: reads irregular custody calendars, adjusts headcount, flags handoff logistics
 - **Co-Parent Communication** — Draft professional, logistics-focused emails for co-parent coordination
 - **Family Dashboard** — Maintain a Notion page as the family's single source of truth
+- **Local Events Scout** — Surface real events happening this week near your zip code — farmers markets, festivals, spring training, family-friendly activities — tagged by age-appropriateness and drive time
 - **Conflict Detection** — Catch double-bookings, childcare gaps, and schedule collisions before they happen
 
 ## How It Works
@@ -59,6 +60,7 @@ Open `~/.claude/skills/parent-helper/SKILL.md` and fill in the `{{PLACEHOLDER}}`
 - Cooking skill levels for each parent
 - Custody arrangements (if applicable)
 - School schedules
+- Your zip code and nearby cities (for local events scout)
 - Local grocery stores and accounts
 - Notion page/database IDs (if using Notion)
 
@@ -74,6 +76,8 @@ At minimum, you need Google Calendar MCP. See [`setup/SETUP.md`](setup/SETUP.md)
 > plan the week
 
 > what's for dinner tonight?
+
+> what's going on this weekend?
 
 > bargain hunt the grocery list
 
@@ -109,6 +113,11 @@ Tuesday: Sheet pan honey garlic salmon + roasted veggies (Parent 1 — full hous
 ### Grocery List
 Proteins: chicken thighs (2 lb), salmon fillets (4), ground beef (1 lb)
 Produce: sweet potatoes (4), broccoli (2 heads), onions (3)...
+
+### What's Going On This Week
+Saturday: Pecan Street Festival — 6th St, Downtown, 11am-10pm (Family) ~10 min
+Sunday: SFC Farmers' Market — Republic Square, 9am-1pm (Family) ~10 min
+Sunday: Round Rock Express vs Sugar Land — Dell Diamond, 2:05pm (Family) ~25 min
 ```
 
 ## Multi-Store Grocery Savings
@@ -160,6 +169,7 @@ parent-helper/
 - **Cooking assignment logic is the secret weapon.** Matching meal complexity to the cook available that night is what makes the plans actually work in real life. A crockpot meal assigned to the less experienced cook on a work night beats an ambitious recipe that never gets made.
 - **The grocery budget keeps you honest.** Set a weekly target and the system will flag when you're trending over.
 - **Custody awareness matters.** If you have a blended family, the headcount-adjusted meal planning alone is worth the setup time.
+- **Set your zip code for local events.** The events scout uses your zip code and nearby cities to search real event calendars each week. Add recurring local events (farmers markets, art walks) as anchors so they always show up. The more specific your city list, the better the results.
 
 ## Requirements
 
