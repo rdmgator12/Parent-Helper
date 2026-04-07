@@ -84,6 +84,38 @@ Publix:   https://www.instacart.com/store/publix/search/<search%20terms>
 
 ---
 
+## Weekly Chore System
+
+**Core Rules:**
+- **Eliza** gets **no assigned chores.** She handles remote work + daily kid logistics. This system takes work OFF her plate.
+- **Lily** gets age-appropriate chores **only on custody weeks** (week-on/week-off). Spread evenly.
+- **Mike** handles the rest — heavier tasks, yard work, errands.
+- Trash cans to curb: always Tuesday (Tampa pickup schedule).
+
+**Lily's Recurring Chores (custody weeks only):**
+
+| Task | Frequency |
+|------|-----------|
+| Clean room & make bed | 1x/week |
+| Lily's laundry (wash, dry, fold) | 1x/week |
+| Vacuum living room | 1x/week |
+| Trash cans to curb | Every Tuesday |
+| Feed Biscuit | Daily (when home) |
+| Unload dishwasher | Daily (when home) |
+
+**Mike's Recurring Chores:**
+
+| Task | Frequency |
+|------|-----------|
+| Clean bathrooms | 1x/week |
+| Mow yard | 1x/week |
+| Vacuum bedrooms | 1x/week |
+| Trash & recycling | 1x/week |
+| Kitchen deep clean | 1x/week |
+| Grocery pickup | 1x/week |
+
+---
+
 ## Notion Dashboard
 
 > **Note:** The IDs below are example placeholders — do not use them literally. Replace each one with your actual Notion page and database IDs. To find your IDs, open the page/database in Notion, click "Share," and copy the ID from the URL.
