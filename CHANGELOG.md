@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.2.0] - 2026-04-07
+
+### Added
+- **Weekly Chore System** — New core capability (Section 6) for assigning and tracking household chores. Custody-aware: child chores only assigned on days they're home. Configurable per-person task tables with frequency. Integrates with Notion To-Do List database.
+- **Chores section in weekly briefing** — Briefing format now includes a Chores block between "What's Going On" and "Action Items".
+- **"Chores" / "Who's doing what?" interaction pattern** — On-demand chore queries.
+- Chore tables added to `family-config-example.md` (Mike/Lily example).
+- Chore section added to `sunday-briefing-example.md`.
+
+### Changed
+- **Structural refactor** — SKILL.md trimmed from 534 to 408 lines. Removed verbose instructional comments, moved cart automation details to `setup/store-profiles.md` reference, consolidated grocery budget into grocery section.
+- Weekly briefing pipeline updated: 9 → 10 steps (chore generation added as step 8).
+- Renamed "Sarah" to "Eliza" in example config to avoid overlap with common family names.
+
+---
+
 ## [1.1.0] - 2026-03-22
 
 ### Added

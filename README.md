@@ -15,6 +15,7 @@ Parent Helper is a single skill file that gives Claude deep context about your f
 - **Co-Parent Communication** — Draft professional, logistics-focused emails for co-parent coordination
 - **Family Dashboard** — Maintain a Notion page as the family's single source of truth
 - **Local Events Scout** — Surface real events happening this week near your zip code — farmers markets, festivals, spring training, family-friendly activities — tagged by age-appropriateness and drive time
+- **Weekly Chore System** — Assign and track household chores, adjusted for custody days and work schedules. Custody-aware: child chores only on days they're home
 - **Conflict Detection** — Catch double-bookings, childcare gaps, and schedule collisions before they happen
 
 ## How It Works
@@ -82,6 +83,8 @@ At minimum, you need Google Calendar MCP. See [`setup/SETUP.md`](setup/SETUP.md)
 > bargain hunt the grocery list
 
 > load the carts
+
+> who's doing what this week?
 
 > email [co-parent] about the schedule change Friday
 ```

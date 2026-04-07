@@ -176,6 +176,23 @@ Parent 1 is post-nights. Parent 2 works 7a-7p. **Sitter covers 7AM-noon.** Paren
 
 ---
 
+## Chores
+
+**Lily** (home Tue + Fri only):
+| Day | Task |
+|-----|------|
+| Tue | Feed Biscuit, unload dishwasher |
+| Fri | Feed Biscuit, unload dishwasher, clean room & make bed |
+
+**Parent 1:**
+| Day | Task |
+|-----|------|
+| Wed | Clean bathrooms, vacuum bedrooms |
+| Thu | Mow yard |
+| Sat | Trash & recycling, kitchen deep clean |
+
+---
+
 ## Action Items
 
 1. **Parent 1:** FaceTime Lily on her actual birthday (Mon 3/16) — coordinate with co-parent
