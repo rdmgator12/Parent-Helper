@@ -15,3 +15,26 @@ my-family-config.md
 
 # Claude Code local settings
 .claude/
+
+# Credentials / env
+.env
+.env.*
+credentials.json
+secrets.yaml
+secrets.yml
+*private_key*
+
+# Working artifacts (not part of the audit snapshot)
+*.xlsx
+*.xls
+*.pdf
+*.log
+
+# Scratch dirs
+scratch/
+private/
+local/
+
+# Windows OS cruft
+Thumbs.db
+Desktop.ini

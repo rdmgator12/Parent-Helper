@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# Alethoskopia pre-commit PHI gate
+# Blocks commits containing patient-name slugs in Maieutic/reasoning/ paths
+# or other common PHI patterns. Calibrated to minimize false positives.
+#
+# Install (from repo root):
+#   ln -sf ../../hooks/pre-commit .git/hooks/pre-commit
+# Override for a single commit (NOT recommended on public repos):
+#   git commit --no-verify
+
+set -euo pipefail
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMRT)
+[ -z "$STAGED" ] && exit 0
+
+FAIL=0
+
+# Pattern 1 — Maieutic/Themis path refs with patient-name slugs
+# Shape: <date>-<firstname>-<lastname>(-<modifier>)* where firstname/lastname
+# are lowercase hyphen-separated tokens (e.g., "kale-taylor-morrison").
+# False-positive trap: disease-name dashboards like "2026-04-14-kawasaki-disease-treatment-resident-guide"
+# contain hyphen tokens too — we allowlist known disease/topic keywords.
+PATH_PATTERN='([Mm]aieutic|[Tt]hemis|[Nn]ostos)/[a-z_]+/[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z]+-[a-z]+-[a-z]'
+DISEASE_ALLOWLIST='kawasaki|dermatomyositis|crohns|bromfed|adhd|incomplete|respiratory|failure|syndrome|disease|treatment|resident|guide|update|workup|optimization|pediatric|ddx'
+
+HITS=$(git diff --cached | grep -iE "^\+" | grep -E "$PATH_PATTERN" || true)
+if [ -n "$HITS" ]; then
+  # Filter out lines where the ONLY hyphen-tokens are disease/topic words
+  SUSPECT=$(echo "$HITS" | grep -viE "$DISEASE_ALLOWLIST" || true)
+  if [ -n "$SUSPECT" ]; then
+    echo "❌ pre-commit: possible patient-name slug in Maieutic/Themis/Nostos path:"
+    echo "$SUSPECT" | sed 's/^/    /'
+    echo ""
+    echo "   Reference cases by number + clinical topic only."
+    echo "   Example: 'Maieutic Case 36 — MRI + exam DDx pivot dashboard'"
+    FAIL=1
+  fi
+fi
+
+# Pattern 2 — PHI-like full names adjacent to clinical keywords
+# Shape: Capitalized-Capitalized within 100 chars of "patient|case|dashboard|workup|mrn"
+# Catches cases like "Patient John Smith" or "Case 36: Kale Taylor-Morrison"
+NAME_CLINICAL=$(git diff --cached | grep -iE "^\+" | grep -E '(patient|case [0-9]+|mrn|dob).{0,100}[A-Z][a-z]+[- ][A-Z][a-z]+' || true)
+if [ -n "$NAME_CLINICAL" ]; then
+  echo "⚠️  pre-commit: clinical keyword near proper-noun name (possible PHI):"
+  echo "$NAME_CLINICAL" | sed 's/^/    /' | head -5
+  echo ""
+  echo "   If this is Ralph's own name, a published author, or a known public figure, override with:"
+  echo "   git commit --no-verify"
+  FAIL=1
+fi
+
+# Pattern 3 — .env / credential files
+CRED_FILES=$(echo "$STAGED" | grep -E '\.env($|\.)|credentials\.json|secrets\.ya?ml|private_key' || true)
+if [ -n "$CRED_FILES" ]; then
+  echo "❌ pre-commit: credential/env file in staged diff:"
+  echo "$CRED_FILES" | sed 's/^/    /'
+  FAIL=1
+fi
+
+if [ "$FAIL" -eq 1 ]; then
+  echo ""
+  echo "Commit blocked. See feedback_no_phi_in_repos.md for policy."
+  exit 1
+fi
+
+exit 0
