@@ -30,7 +30,7 @@ Changelog:
          main()'s pre-filter — lets the hook's own test file (which
          contains synthetic patient-name slugs) commit without
          --no-verify. Added stdlib unittest suite under hooks/tests/
-         (42 tests, zero deps). Added hooks/scan-history.py for
+         (61 tests, zero deps). Added hooks/scan-history.py for
          retroactive full-history scans.
   v1.3 — Dropped bare "name:" label trigger (matched CI workflow step
          names like "name: Use Node"). Kept specific labels: patient,

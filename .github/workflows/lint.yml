@@ -19,3 +19,4 @@ jobs:
           python-version: '3.12'
       - run: pip install ruff
       - run: ruff check hooks/
+      - run: python -m unittest discover -s hooks/tests -v
