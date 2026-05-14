@@ -9,6 +9,11 @@
 *.swp
 *.swo
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
 # Personal config (if someone fills in their SKILL.md locally)
 my-family-config.md
 *.personal.md
