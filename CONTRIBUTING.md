@@ -44,9 +44,31 @@ We also welcome:
 
 ## Guidelines
 
-- **Don't include personal data.** No real names, addresses, Notion IDs, or calendar details. Use fictional examples if you need to demonstrate something.
+- **Don't include personal data.** No real names, addresses, Notion IDs, or calendar details. Use fictional examples if you need to demonstrate something. This is enforced by a PHI/secret pre-commit hook (see below) — but the hook is a backstop, not a substitute for judgment.
 - **Keep store profiles consistent.** Follow the existing format in `store-profiles.md` so all profiles look the same.
 - **One store per PR** makes review easier, but bundling related stores (e.g., all Kroger subsidiaries) in one PR is fine.
+
+## PHI / secret protection
+
+This repo ships a defense-in-depth gate against committing personal data, credentials, or
+patient information:
+
+- **Pre-commit hook** — install it once per clone:
+  ```sh
+  ln -sf ../../hooks/pre-commit .git/hooks/pre-commit
+  ```
+  It blocks staged credential/env files, PHI-risk binaries, structured-data exports
+  (`.csv`/`.tsv`), and content that looks like a name next to a DOB/MRN. Override only when
+  you're certain it's a false positive: `git commit --no-verify`.
+- **Retroactive audit** — scan a repo's entire history (the hook only guards new commits):
+  ```sh
+  python hooks/scan-history.py
+  ```
+- **Tests** — `python -m unittest discover -s hooks/tests` (86 cases, zero deps). Add a
+  regression test alongside any change to the gate's patterns.
+
+The hook is a heuristic backstop with known limits — it raises the floor, it is not a
+guarantee. Real-name/PHI hygiene is still the contributor's responsibility.
 
 ## Questions?
 
