@@ -19,10 +19,12 @@ from phi_hook import (
     LABEL_THEN_NAME,
     NAME_THEN_PHI,
     PATH_SLUG,
+    RECORD_ROW,
     added_lines,
     run_scan,
     scan_binaries,
     scan_credentials,
+    scan_data_files,
     scan_name_phi,
     scan_slug,
     strip_allowlisted,
@@ -288,6 +290,120 @@ class TestRegexShapes(unittest.TestCase):
 
     def test_fixture_path_matches_github(self):
         self.assertIsNotNone(FIXTURE_PATH.search(".github/workflows/lint.yml"))
+
+
+class TestV15Pattern5DataFiles(unittest.TestCase):
+    """v1.5 Pattern 5 — structured-data (.csv/.tsv/.psv) gate."""
+
+    def test_csv_at_root_blocks(self):
+        self.assertEqual(scan_data_files(["patient_list.csv"]), ["patient_list.csv"])
+
+    def test_tsv_at_root_blocks(self):
+        self.assertEqual(scan_data_files(["export.tsv"]), ["export.tsv"])
+
+    def test_csv_under_fixtures_passes(self):
+        self.assertEqual(scan_data_files(["tests/fixtures/sample.csv"]), [])
+
+    def test_csv_under_docs_passes(self):
+        self.assertEqual(scan_data_files(["docs/data.csv"]), [])
+
+    def test_json_not_treated_as_data_file(self):
+        self.assertEqual(scan_data_files(["package.json", "config/app.json"]), [])
+
+    def test_run_scan_flags_data_kind(self):
+        result = run_scan(files=["patients.csv"], diff_lines=[])
+        self.assertIn("data", [r[0] for r in result])
+
+
+class TestV15RecordRow(unittest.TestCase):
+    """v1.5 — value-shaped record rows (name + DOB-value + id) evading literal labels."""
+
+    def test_csv_record_row_caught(self):
+        self.assertEqual(len(scan_name_phi(["John Smith,2015-03-01,00123456"])), 1)
+
+    def test_tab_delimited_record_caught(self):
+        self.assertEqual(len(scan_name_phi(["Mary Jones\t01/02/2015\t99887"])), 1)
+
+    def test_slashed_dob_record_caught(self):
+        self.assertEqual(len(scan_name_phi(["Robert Brown, 3/4/2016, 100200"])), 1)
+
+    def test_prose_with_date_not_false_positive(self):
+        # no trailing delimited id → not a record row
+        self.assertEqual(scan_name_phi(["Meeting Notes 2026-01-15 with the team"]), [])
+
+    def test_record_row_regex_present(self):
+        self.assertIsNotNone(RECORD_ROW.search("Jane Doe,2014-06-01,55512"))
+
+
+class TestV15NameShape(unittest.TestCase):
+    """v1.5 — middle initials and apostrophes no longer evade Pattern 2."""
+
+    def test_middle_initial_with_period(self):
+        self.assertEqual(
+            len(scan_name_phi(["patient: John A. Smith DOB 2015-03-01"])), 1
+        )
+
+    def test_middle_initial_no_period(self):
+        self.assertEqual(len(scan_name_phi(["John A Smith MRN 1234567"])), 1)
+
+    def test_apostrophe_name(self):
+        self.assertEqual(
+            len(scan_name_phi(["patient: Sean O'Brien DOB 2015-03-01"])), 1
+        )
+
+    def test_hyphenated_first_name(self):
+        self.assertEqual(len(scan_name_phi(["Mary-Jane Watson DOB 1990-01-01"])), 1)
+
+    def test_all_caps_acronym_not_a_name(self):
+        # 'MRI Scan' must not read as a person name adjacent to a field
+        self.assertEqual(scan_name_phi(["MRI Scan ordered, see DOB note"]), [])
+
+
+class TestV15BracketStrip(unittest.TestCase):
+    """v1.5 — bracket-placeholder strip no longer immunizes real bracketed PHI."""
+
+    def test_real_phi_in_brackets_is_caught(self):
+        self.assertEqual(
+            len(scan_name_phi(["- [Jane Doe, DOB 2015-03-01, MRN 9988]"])), 1
+        )
+
+    def test_literal_placeholder_still_passes(self):
+        self.assertEqual(scan_name_phi(["Template: [Patient Name, DOB]"]), [])
+
+    def test_first_last_placeholder_passes(self):
+        self.assertEqual(scan_name_phi(["Use [First Last] here."]), [])
+
+
+class TestV15SlugTightening(unittest.TestCase):
+    """v1.5 — disease allowlist requires BOTH tokens clinical; Pattern 1 scans paths."""
+
+    def test_patient_plus_disease_token_still_flagged(self):
+        self.assertEqual(
+            len(scan_slug(["Maieutic/Cases/2026-04-21-johnson-asthma-r"])), 1
+        )
+
+    def test_two_clinical_tokens_still_allowlisted(self):
+        self.assertEqual(scan_slug(["Maieutic/2026-04-21-kawasaki-disease-a"]), [])
+
+    def test_pattern1_scans_file_path_via_run_scan(self):
+        path = "Maieutic/Cases/2026-06-19-john-smith-x/dashboard.md"
+        result = run_scan(files=[path], diff_lines=[], slug_paths=[path])
+        self.assertIn("slug", [r[0] for r in result])
+
+
+class TestV15CredentialBroadening(unittest.TestCase):
+    """v1.5 — prefixed secrets files and secrets.json now caught."""
+
+    def test_prefixed_secrets_yaml_blocks(self):
+        self.assertEqual(
+            scan_credentials(["config-secrets.yaml"]), ["config-secrets.yaml"]
+        )
+
+    def test_secrets_json_blocks(self):
+        self.assertEqual(scan_credentials(["app-secrets.json"]), ["app-secrets.json"])
+
+    def test_plain_secrets_yaml_still_blocks(self):
+        self.assertEqual(scan_credentials(["secrets.yaml"]), ["secrets.yaml"])
 
 
 if __name__ == "__main__":

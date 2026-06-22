@@ -1,12 +1,15 @@
-"""PHI pre-commit hook — v1.4 (2026-04-15, Python).
+"""PHI pre-commit hook — v1.5 (2026-06-19, Python).
 
 Importable module. Entry point is `main()`. `pre-commit` is a thin wrapper.
 
-Four-pattern gate:
-1. Patient-name slugs in Maieutic/Themis/Nostos reasoning paths
-2. Proper-noun name adjacent to PHI field (DOB/MRN/insurance/patient/plaintiff)
-3. Credential files (.env, credentials.json, secrets.yml, *private_key*)
+Five-pattern gate:
+1. Patient-name slugs in Maieutic/Themis/Nostos reasoning paths (scans staged
+   content AND the staged file paths themselves)
+2. Proper-noun name adjacent to PHI field (DOB/MRN/insurance/patient/plaintiff),
+   incl. value-shaped record rows (name + DOB-value + id) like a CSV line
+3. Credential files (.env, credentials.json, *secrets.{yml,json}, *private_key*)
 4. PHI-risk binary files (pdf/docx/xlsx/png/jpg/tif/dcm) outside allowlisted paths
+5. Structured-data files (.csv/.tsv/.psv) outside allowlisted paths
 
 Path allowlist skips synthetic-fixture directories:
   TestCase_*/ | fixtures/ | test_data/ | tests/fixtures/ |
@@ -14,8 +17,24 @@ Path allowlist skips synthetic-fixture directories:
 
 Install (per repo): ln -sf ../../hooks/pre-commit .git/hooks/pre-commit
 Override: git commit --no-verify (discouraged)
+Full-history audit (existing repos): python hooks/scan-history.py
 
 Changelog:
+  v1.5 — Recall-hardening pass (closed false-negatives found in review):
+         (1) Pattern 5: structured-data gate (.csv/.tsv/.psv) — a patient
+         line-list is the likeliest clinician leak and evaded both the binary
+         gate and the label heuristics. (2) Pattern 2 now also matches a
+         value-shaped record row (name + DOB-value + id, e.g. a CSV line) —
+         labels DOB/MRN need not appear literally. (3) Pattern 1 now scans the
+         staged file PATHS, not just diff content, so a patient-named file under
+         Maieutic/Themis/Nostos can't slip in unechoed. (4) Disease allowlist
+         requires BOTH slug tokens to be clinical (was: any single disease word
+         exempted the whole slug, so 'johnson-asthma-r' passed). (5) NAME_SHAPE
+         catches middle initials (John A. Smith) and apostrophes (O'Brien).
+         (6) Bracket-placeholder strip narrowed to literal placeholder vocab
+         (was: any [Cap Cap] pair, which immunized a real bracketed name).
+         (7) CRED_FILE catches prefixed secrets (config-secrets.yaml) + .json.
+         Actually shipped hooks/scan-history.py (claimed in v1.4, was missing).
   v1.4 — Extracted scan logic into importable module. Added Pattern 4
          (binary-file gate) with path allowlist (assets/docs/images/
          screenshots/references/static/public/.github). icons/favicons/
@@ -51,7 +70,7 @@ import sys
 # ----- Pattern 1: Maieutic/Themis/Nostos path slug with patient-name shape
 PATH_SLUG = re.compile(
     r"(?:[Mm]aieutic|[Tt]hemis|[Nn]ostos)"
-    r"/[A-Za-z0-9_/-]+/\d{4}-\d{2}-\d{2}-[a-z]+-[a-z]+-[a-z]"
+    r"/[A-Za-z0-9_/-]+/\d{4}-\d{2}-\d{2}-([a-z]+)-([a-z]+)-[a-z]"
 )
 
 DISEASE_ALLOWLIST = re.compile(
@@ -64,7 +83,14 @@ DISEASE_ALLOWLIST = re.compile(
 )
 
 # ----- Pattern 2: proper-noun name adjacent to PHI field
-NAME_SHAPE = r"\b[A-Z][a-z]{1,20}[- ][A-Z][a-z]{1,20}\b"
+# A name token: capitalized first/last, allowing an internal apostrophe/hyphen compound
+# (Mary-Jane, D'Angelo) or a cap-apostrophe-cap head (O'Brien). All-caps tokens (MRI, CT)
+# are deliberately excluded — the first segment requires a lowercase tail.
+_NAME_TOKEN = (
+    r"(?:[A-Z][a-z]{1,20}|[A-Z]['’][A-Z][a-z]{1,20})" r"(?:[-'’][A-Z]?[a-z]{1,20})?"
+)
+# First [optional middle initial] Last — the middle initial closes the "John A. Smith" gap.
+NAME_SHAPE = r"\b" + _NAME_TOKEN + r"(?:[ ][A-Z]\.?)?[ \-]" + _NAME_TOKEN + r"\b"
 PHI_FIELD = r"\b(DOB|MRN|dob|mrn|date[_ ]of[_ ]birth|insurance[_ ]?id)\b"
 
 NAME_THEN_PHI = re.compile(NAME_SHAPE + r"[^A-Za-z\n]{0,60}" + PHI_FIELD)
@@ -78,8 +104,15 @@ LABEL_THEN_NAME = re.compile(
 # Ralph's own name is case-sensitive (proper noun, not a substring match).
 # Bracketed placeholders like [Patient Name, DOB] are template literals.
 SELF_NAME_ALLOW = re.compile(r"\bRalph Martello\b")
+# Strip ONLY literal placeholder vocabulary, never an arbitrary [Cap Cap] pair — the old
+# `[A-Z][a-z]+ [A-Z][a-z]+` form stripped a real bracketed `[<First> <Last>, DOB ...]` and
+# immunized it.
 BRACKET_PLACEHOLDER_ALLOW = re.compile(
-    r"\[[A-Z][a-z]+ [A-Z][a-z]+(,[^\]]+)?\]",
+    r"\[(?:"
+    r"patient[\s_-]?name|full[\s_-]?name|first[\s_-]?(?:and[\s_-]?)?last|"
+    r"first[\s_-]?name|last[\s_-]?name|name|patient|first|last|"
+    r"dob|mrn|date[\s_-]?of[\s_-]?birth|insurance[\s_-]?id|insert[\s\w]*|your[\s\w]*"
+    r")(?:,[^\]]*)?\]",
     re.IGNORECASE,
 )
 
@@ -92,7 +125,7 @@ CRED_FILE = re.compile(
     r"(^|/)("
     r"\.env(\.(?!(?:example|sample|template)\b)[^/]*)?|"
     r"credentials\.json|"
-    r"secrets\.ya?ml|"
+    r"[^/]*secrets?\.(?:ya?ml|json)|"  # secrets.yaml, config-secrets.yaml, app-secrets.json
     r"[^/]*private_key[^/]*"
     r")$"
 )
@@ -113,6 +146,24 @@ BINARY_ALLOW_PATH = re.compile(
 )
 # NOTE: `icons/`, `favicons/`, `logos/` are deliberately NOT allowlisted.
 # Tight binary gate > clean history scan. Legit icon commits use --no-verify.
+
+# ----- Pattern 5: structured-data files + value-shaped PHI records
+# CSV/TSV/PSV are almost always data exports (a line-list of patients is the single most
+# likely PHI leak for a clinician) and are rarely legitimate source files, so they're gated
+# outside the binary/fixture allowlists just like binaries.
+DATA_FILE_RISK = re.compile(r"\.(csv|tsv|psv)$", re.IGNORECASE)
+
+# A record row carrying VALUES rather than the literal labels DOB/MRN evades Pattern 2
+# (Pattern 2 keys on the words "DOB"/"MRN", not on a date or an id value). Catch the strong
+# record signature: a name, a date-of-birth-shaped value, and an id number, delimited by
+# comma/tab/pipe — e.g. `<First> <Last>,YYYY-MM-DD,<id>`. The three-field shape keeps false
+# positives low (prose with a bare date has no trailing delimited id).
+_DOB_VALUE = (
+    r"(?:19|20)\d{2}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[-/]\d{1,2}[-/](?:19|20)?\d{2}"
+)
+RECORD_ROW = re.compile(
+    NAME_SHAPE + r"\s*[,\t|]\s*(?:" + _DOB_VALUE + r")\s*[,\t|]\s*\d{3,}"
+)
 
 # ----- Path allowlist for synthetic-fixture directories AND metadata files
 FIXTURE_PATH = re.compile(
@@ -173,13 +224,21 @@ def strip_allowlisted(line):
 
 
 def scan_slug(diff_lines):
-    """Pattern 1. Input: iterable of raw diff lines. Returns [(line, match), ...]."""
+    """Pattern 1. Input: iterable of raw diff lines (or file paths). Returns
+    [(line, match), ...].
+
+    A slug is allowlisted only when BOTH descriptive tokens are clinical vocabulary.
+    (Old bug: `DISEASE_ALLOWLIST.search(slug)` exempted the whole slug if ANY single
+    word matched, so 'johnson-asthma-r' passed because 'asthma' is allowlisted.)
+    """
     hits = []
     for line in diff_lines:
         for m in PATH_SLUG.finditer(line):
-            if not DISEASE_ALLOWLIST.search(m.group(0)):
-                hits.append((line.rstrip(), m.group(0)))
-                break
+            t1, t2 = m.group(1), m.group(2)
+            if DISEASE_ALLOWLIST.fullmatch(t1) and DISEASE_ALLOWLIST.fullmatch(t2):
+                continue  # clinical-topic slug, not a patient name
+            hits.append((line.rstrip(), m.group(0)))
+            break
     return hits
 
 
@@ -193,7 +252,11 @@ def scan_name_phi(diff_lines):
     hits = []
     for line in diff_lines:
         stripped = strip_allowlisted(line)
-        hit = NAME_THEN_PHI.search(stripped) or LABEL_THEN_NAME.search(stripped)
+        hit = (
+            NAME_THEN_PHI.search(stripped)
+            or LABEL_THEN_NAME.search(stripped)
+            or RECORD_ROW.search(stripped)
+        )
         if hit:
             hits.append((line.rstrip(), hit.group(0)))
     return hits
@@ -218,15 +281,35 @@ def scan_binaries(files):
     return hits
 
 
-def run_scan(files, diff_lines):
+def scan_data_files(files):
+    """Pattern 5. Structured-data files (.csv/.tsv/.psv) outside allowlists — patient
+    line-list exports that evade both the binary gate and the content label heuristics.
+    """
+    hits = []
+    for f in files:
+        if not DATA_FILE_RISK.search(f):
+            continue
+        if BINARY_ALLOW_PATH.search(f):
+            continue
+        if FIXTURE_PATH.search(f):
+            continue
+        hits.append(f)
+    return hits
+
+
+def run_scan(files, diff_lines, slug_paths=None):
     """Pure scan orchestrator. Returns list of (kind, detail, match) tuples.
 
     `diff_lines` should be the added-line set from non-fixture files only.
-    Callers that need to apply Pattern 1 universally (e.g., the history scanner)
-    should call scan_slug() directly.
+    `slug_paths`, when given, are non-fixture file PATHS scanned with Pattern 1 — a
+    patient-named file under Maieutic/Themis/Nostos must be caught even if the slug
+    never appears in the file's content (the path lives only in diff headers, which
+    added_lines() strips). Callers that need Pattern 1 universally call scan_slug() directly.
     """
     fails = []
     for line, m in scan_slug(diff_lines):
+        fails.append(("slug", line, m))
+    for line, m in scan_slug(slug_paths or []):
         fails.append(("slug", line, m))
     for line, m in scan_name_phi(diff_lines):
         fails.append(("name_phi", line, m))
@@ -234,6 +317,8 @@ def run_scan(files, diff_lines):
         fails.append(("credential", f, f))
     for f in scan_binaries(files):
         fails.append(("binary", f, f))
+    for f in scan_data_files(files):
+        fails.append(("data", f, f))
     return fails
 
 
@@ -248,6 +333,7 @@ def main():
     fails = run_scan(
         files=files,
         diff_lines=added_lines(diff_nf),
+        slug_paths=non_fixture,
     )
 
     if not fails:
@@ -257,6 +343,7 @@ def main():
     name_hits = [f for f in fails if f[0] == "name_phi"]
     cred_hits = [f for f in fails if f[0] == "credential"]
     bin_hits = [f for f in fails if f[0] == "binary"]
+    data_hits = [f for f in fails if f[0] == "data"]
 
     if slug_hits:
         print(
@@ -300,6 +387,16 @@ def main():
         print("   Or for test fixtures: tests/ | fixtures/ | TestCase_*/")
         print("   Otherwise: confirm no patient info is in the file, then:")
         print("     git commit --no-verify")
+        print()
+
+    if data_hits:
+        print("❌ pre-commit: structured-data file (.csv/.tsv) in staged diff:")
+        for _, f, _ in data_hits:
+            print(f"    {f}")
+        print()
+        print("   CSV/TSV exports are a common patient-list leak. If this is synthetic")
+        print("   or non-PHI reference data, move it under tests/ | fixtures/ | docs/,")
+        print("   otherwise confirm no patient info, then: git commit --no-verify")
         print()
 
     print("Commit blocked. See feedback_no_phi_in_repos.md for policy.")
