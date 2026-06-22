@@ -160,6 +160,11 @@ parent-helper/
     family-config-example.md         # Example of a fully configured family profile
   examples/
     sunday-briefing-example.md       # Example weekly briefing output
+  hooks/
+    pre-commit                       # Git hook entry point (thin wrapper)
+    phi_hook.py                      # PHI / credential / secret gate (importable)
+    scan-history.py                  # Retroactive full-history PHI scanner
+    tests/                           # 86 stdlib-unittest cases (zero deps)
   assets/
     parent-helper-banner.jpg         # Banner image
 ```
@@ -185,6 +190,19 @@ parent-helper/
 - **Notion** — for the persistent family dashboard
 - **Gmail** — for co-parent coordination and partner briefing emails
 - **Chrome MCP** ([Claude in Chrome](https://chromewebstore.google.com/detail/claude-in-chrome/)) — for grocery cart automation and multi-store price scanning
+
+## Privacy & Safety
+
+Parent Helper works with real family data (schedules, names, co-parent details), so the repo
+ships a defense-in-depth gate to keep that data out of commits:
+
+- **`hooks/pre-commit`** blocks staged credential/env files, PHI-risk binaries, structured-data
+  exports (`.csv`/`.tsv`), and content that reads like a name next to a DOB/MRN. Install it
+  per clone: `ln -sf ../../hooks/pre-commit .git/hooks/pre-commit`
+- **`hooks/scan-history.py`** audits a repo's entire history retroactively.
+
+It's a heuristic backstop that raises the floor — not a guarantee. Keep real names and personal
+details out of your config and examples regardless. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Contributing
 

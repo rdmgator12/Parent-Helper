@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.2.1] - 2026-06-22
+
+### Security
+- **PHI pre-commit hook hardened to v1.5.** Closed seven false-negatives in the
+  `hooks/phi_hook.py` gate, each covered by a regression test:
+  a structured-data (`.csv`/`.tsv`/`.psv`) gate for patient line-list exports;
+  value-shaped record rows (`name, DOB-value, id`) that carried no literal `DOB`/`MRN`
+  label; Pattern 1 now scans staged file **paths**, not just content; the disease
+  allowlist now requires **both** slug tokens be clinical; name matching now catches
+  middle initials and apostrophes; the bracket-placeholder allowlist was narrowed so a
+  real bracketed name is no longer immunized; and credential matching now catches
+  prefixed secrets files (`config-secrets.yaml`, `*secrets.json`).
+
+### Added
+- **`hooks/scan-history.py`** — read-only retroactive scanner that applies the same gate
+  across a repo's full git history (the pre-commit hook only guards new commits).
+- Hook test suite expanded to 86 stdlib-unittest cases (zero deps).
+
 ## [1.2.0] - 2026-04-07
 
 ### Added
